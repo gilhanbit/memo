@@ -1,7 +1,7 @@
 package com.memo.test;
 
 import com.memo.post.mapper.PostMapper;
-import com.memo.post.mapper.domain.Post;
+import com.memo.post.domain.Post;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,4 +1,4 @@
-package com.memo.post.mapper.domain;
+package com.memo.post.domain;
 
 import lombok.Data;
 import lombok.ToString;
