@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/defaultLayout}">
+
+<th:block layout:fragment="content">
+  <section class="contents d-flex justify-content-center">
+    <div class="w-50 py-4">
+      <h1>글 상세</h1>
+      <input type="text" class="form-control" id="subject" th:value="${post.subject}" placeholder="제목을 입력하세요.">
+      <textarea class="form-control" id="content" placeholder="내용을 입력하세요" rows="10" th:text="${post.content}"></textarea>
+
+      <!-- 이미지가 있을 때만 이미지 표시 -->
+      <div th:if="${post.imagePath != null}" class="my-3">
+        <img th:src="${post.imagePath}" alt="본문 이미지" width="300">
+      </div>
+
+      <div class="d-flex justify-content-end my-3">
+        <input type="file" id="file" accept=".jpg, .gif, .png">
+      </div>
+
+      <div class="d-flex justify-content-between">
+        <button type="button" id="deletePostBtn" class="btn btn-secondary" th:data-post-id="${post.id}">삭제</button>
+        <div>
+          <a href="/post/post-list-view" class="btn btn-dark">목록</a>
+          <button type="button" id="saveBtn" class="btn btn-warning" th:data-post-id="${post.id}">수정</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    $(function() {
+        // 수정 글 저장
+        $("#saveBtn").on("click", function() {
+            let postId = $(this).data("post-id");
+            //alert(postId);
+            let subject = $("#subject").val().trim();
+            let content = $("#content").val().trim();
+            let fileName = $("#file").val(); // C:\fakepath\prairie-dog-9569847_1280.jpg
+            console.log(fileName);
+
+            if (!subject) {
+                alert("제목을 입력하세요.");
+                return;
+            }
+
+            if (!content) {
+                alert("내용을 입력하세요.");
+                return;
+            }
+
+            // 파일명이 있으면(업로드) 확장자 체크
+            if (fileName) {
+                let extension = fileName.split(".").pop().toLowerCase();
+                console.log(extension);
+                if ($.inArray(extension, ["jpg", "png", "gif"]) == -1) {
+                    alert("이미지 파일만 업로드 할 수 있습니다.");
+                    $("#file").val(""); // 파일을 비운다.
+                    return;
+                }
+            }
+
+            // 이미지 업로드시 form 태그 반드시 필요 => js에서 만든다
+            let formData = new FormData();
+            formData.append("postId", postId);
+            formData.append("subject", subject); // key == form 태그의 name 속성 => request param
+            formData.append("content", content); // key == form 태그의 name 속성 => request param
+            formData.append("file", $("#file")[0].files[0]);
+
+            $.ajax({
+                // request
+                type:"put"
+                , url:"/post/update"
+                , data: formData
+                , processData:false  // 파일업로드 필수 설정
+                , contentType:false  // 파일업로드 필수 설정
+                , enctype:"multipart/form-data" // 파일업로드 필수 설정
+
+                // response
+                , success:function(data) {
+                    if (data.result == "성공") {
+                        alert("글이 수정되었습니다.");
+                        location.reload();
+                    } else {
+                        alert(data.error_message);
+                    }
+                }
+                , error:function(e) {
+                    alert("글을 저장하는데 실패했습니다.");
+                }
+            });
+        });
+
+
+        // 글 삭제
+        $("#deletePostBtn").on("click", function(){
+            let postId = $(this).data("post-id");
+            //alert(postId);
+
+            if(confirm("정말 삭제하시겠습니까?") === false){ // 취소 시 리턴이기 때문에 false
+                return;
+            }
+
+            $.ajax({
+                type:"delete"
+                , url:"/post/delete"
+                , data:{"postId":postId}
+                , success:function(data) {
+                    if(data.code == 200) {
+                      alert("글이 삭제되었습니다.");
+                      location.href = "/post/post-list-view";
+                    } else {
+                        alert(data.error_message);
+                    }
+                }
+                , error:function(){
+                    alert("글 삭제에 실패했습니다.");
+                }
+            });
+        });
+    });
+  </script>
+</th:block>
+</html>
